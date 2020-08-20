@@ -46,12 +46,18 @@ function exportFunctionUnderCursor() {
 					editBuilder.replace(new vscode.Range(start, end), `${functionName} };`);
 				});
 			} else if (exportsSourceLine.includes('}')) { // module.exports = { someFunctionName }; exists in the file
-				editor.edit(editBuilder => {
-					const start = new vscode.Position(exportsLine, document.lineAt(exportsLine).range.end.character - 3);
-					const end = new vscode.Position(exportsLine, document.lineAt(exportsLine).range.end.character);
+				// Possible optimization: go over the string one time symbol by symbol instead of a chain of methods that each go over a string
+				const alreadyExportedFunctions = exportsSourceLine.replace(/\s+/g, '').replace(/^module.exports={/, '').replace(/[};]/g, '').split(',').map(fn => fn.trim());
 
-					editBuilder.replace(new vscode.Range(start, end), `, ${functionName} };`);
-				});
+				if (!alreadyExportedFunctions.includes(functionName)) {
+					editor.edit(editBuilder => {
+						const start = new vscode.Position(exportsLine, document.lineAt(exportsLine).range.end.character - 3);
+						const end = new vscode.Position(exportsLine, document.lineAt(exportsLine).range.end.character);
+
+						editBuilder.replace(new vscode.Range(start, end), `, ${functionName} };`);
+					});
+
+				}
 			} else if (!exportsSourceLine.includes('{') && !exportsSourceLine.includes('}')) { // module.exports = somename; exists in the file
 				editor.edit(editBuilder => {
 					const match = exportsSourceLine.replace(';', '').match(/[^=]*$/); // Do not lose the thing that is already being exported
@@ -60,32 +66,37 @@ function exportFunctionUnderCursor() {
 						const start = document.lineAt(exportsLine).range.start;
 						const end = document.lineAt(exportsLine).range.end;
 
-						editBuilder.replace(new vscode.Range(start, end), `module.exports = { ${exportedThing}, ${functionName} };`);
+						if (exportedThing !== functionName) {
+							editBuilder.replace(new vscode.Range(start, end), `module.exports = { ${exportedThing}, ${functionName} };`);
+						}
 					}
 				});
 			} else if (!exportsSourceLine.includes('}')) { // module.exports statement expands multiple lines
 				// Find the end of the module.exports statement
 				let endLine = -1;
+				const alreadyExportedFunctions: string[] = [];
 				for (let i = exportsLine; i < document.lineCount; ++i) {
 					const sourceLine = document.lineAt(i).text;
 					if (sourceLine && sourceLine.includes('}')) {
 						endLine = i;
 						break;
-					}
+					} else { alreadyExportedFunctions.push(sourceLine.replace(/,/g, '').trim()); }
 				}
 
-				editor.edit(editBuilder => {
-					// If the last export doesn't contain a comma, we should add one
-					if (!document.lineAt(endLine - 1).text.includes(',')) {
-						const start = new vscode.Position(endLine - 1, document.lineAt(endLine - 1).range.end.character);
-						editBuilder.replace(start, ',');
-					}
+				if (!alreadyExportedFunctions.includes(functionName)) {
+					editor.edit(editBuilder => {
+						// If the last export doesn't contain a comma, we should add one
+						if (!document.lineAt(endLine - 1).text.includes(',')) {
+							const start = new vscode.Position(endLine - 1, document.lineAt(endLine - 1).range.end.character);
+							editBuilder.replace(start, ',');
+						}
 
-					const start = new vscode.Position(endLine, document.lineAt(endLine).range.end.character - 2);
-					const end = new vscode.Position(endLine, document.lineAt(endLine).range.end.character);
+						const start = new vscode.Position(endLine, document.lineAt(endLine).range.end.character - 2);
+						const end = new vscode.Position(endLine, document.lineAt(endLine).range.end.character);
 
-					editBuilder.replace(new vscode.Range(start, end), `\t${functionName},\n};`);
-				});
+						editBuilder.replace(new vscode.Range(start, end), `\t${functionName},\n};`);
+					});
+				}
 			}
 		}
 	}
