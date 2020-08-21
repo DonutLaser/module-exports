@@ -3,6 +3,10 @@
 	"displayName": "js-module-exports",
 	"description": "A quick way to export Javascript module functions",
 	"publisher": "DonutLaser",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/DonutLaser/module-exports"
+	},
 	"version": "0.0.1",
 	"engines": {
 		"vscode": "^1.48.0"
