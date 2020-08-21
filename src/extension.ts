@@ -1,26 +1,26 @@
 import * as vscode from 'vscode';
 import * as modulesEditor from './editor';
 
-function exportFunctions(editor: vscode.TextEditor, functionNames: string[]) {
+async function exportFunctions(editor: vscode.TextEditor, functionNames: string[]) {
 	const text = editor.document.getText();
 	if (!text.includes('module.exports')) { // module.exports doesn't exist in the file
-		modulesEditor.newExportStatement(editor, functionNames);
+		await modulesEditor.newExportStatement(editor, functionNames);
 	} else {
 		const exportsType = modulesEditor.getExportsType(editor.document);
 
 		if (exportsType === 'empty') { // module.exports = { }; exists in the file 
-			modulesEditor.addToExport(editor, functionNames);
+			await modulesEditor.addToExport(editor, functionNames);
 		} else if (exportsType === 'inline') { // module.exports = { someFunctionName }; exists in the file
-			modulesEditor.inlineAppendToExport(editor, functionNames);
+			await modulesEditor.inlineAppendToExport(editor, functionNames);
 		} else if (exportsType === 'single') { // module.exports = somename; exists in the file
-			modulesEditor.replaceSingleExport(editor, functionNames);
+			await modulesEditor.replaceSingleExport(editor, functionNames);
 		} else if (exportsType === 'list') { // module.exports statement expands multiple lines
-			modulesEditor.listAppendToExport(editor, functionNames);
+			await modulesEditor.listAppendToExport(editor, functionNames);
 		}
 	}
 }
 
-function exportFunctionUnderCursor() {
+export function exportFunctionUnderCursor() {
 	const editor = vscode.window.activeTextEditor;
 
 	if (editor) {
@@ -39,11 +39,11 @@ function exportFunctionUnderCursor() {
 			}
 		}
 
-		exportFunctions(editor, [functionName]);
+		return exportFunctions(editor, [functionName]);
 	}
 }
 
-function exportAllFunctions() {
+export function exportAllFunctions() {
 	const editor = vscode.window.activeTextEditor;
 
 	if (editor) {
@@ -57,7 +57,7 @@ function exportAllFunctions() {
 			}
 		}
 
-		exportFunctions(editor, functionNames);
+		return exportFunctions(editor, functionNames);
 	}
 }
 

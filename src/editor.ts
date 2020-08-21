@@ -50,7 +50,7 @@ function newExportStatement(editor: vscode.TextEditor, functionNames: string[]) 
     if (!functionNames || functionNames.length === 0) { return; }
 
     const document = editor.document;
-    editor.edit(editBuilder => {
+    return editor.edit(editBuilder => {
         const lastLine = document.lineAt(document.lineCount - 1).range.end;
         editBuilder.insert(lastLine, `\n\nmodule.exports = { ${functionNames.join(', ')} };`);
     });
@@ -62,7 +62,7 @@ function addToExport(editor: vscode.TextEditor, functionNames: string[]) {
 
     const document = editor.document;
     const { exportsLine } = getExportsLineInText(document);
-    editor.edit(editBuilder => {
+    return editor.edit(editBuilder => {
         const start = new vscode.Position(exportsLine, document.lineAt(exportsLine).range.end.character - 2);
         const end = new vscode.Position(exportsLine, document.lineAt(exportsLine).range.end.character);
 
@@ -86,7 +86,7 @@ function inlineAppendToExport(editor: vscode.TextEditor, functionNames: string[]
     });
 
     if (filteredNames.length > 0) {
-        editor.edit(editBuilder => {
+        return editor.edit(editBuilder => {
             const start = new vscode.Position(exportsLine, document.lineAt(exportsLine).range.end.character - 3);
             const end = new vscode.Position(exportsLine, document.lineAt(exportsLine).range.end.character);
 
@@ -120,7 +120,7 @@ function listAppendToExport(editor: vscode.TextEditor, functionNames: string[]) 
     });
 
     if (filteredNames.length > 0) {
-        editor.edit(editBuilder => {
+        return editor.edit(editBuilder => {
             // If the last export doesn't contain a comma, we should add one
             if (!document.lineAt(endLine - 1).text.includes(',')) {
                 const start = new vscode.Position(endLine - 1, document.lineAt(endLine - 1).range.end.character);
@@ -147,7 +147,7 @@ function replaceSingleExport(editor: vscode.TextEditor, functionNames: string[])
         const filteredNames = functionNames.filter(name => name !== exportedThing);
 
         if (filteredNames.length > 0) {
-            editor.edit(editBuilder => {
+            return editor.edit(editBuilder => {
                 const start = document.lineAt(exportsLine).range.start;
                 const end = document.lineAt(exportsLine).range.end;
 
