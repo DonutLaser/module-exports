@@ -5,8 +5,6 @@ import * as assert from 'assert';
 import * as vscode from 'vscode';
 import * as path from 'path';
 import * as myExtension from '../../extension';
-import { clear } from 'console';
-import { EISDIR } from 'constants';
 
 async function createTestFile() {
 	const newFile = vscode.Uri.parse('untitled:' + path.join('.', 'untitled.js'));
