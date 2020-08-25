@@ -39,7 +39,7 @@ export function exportFunctionUnderCursor() {
 			}
 		}
 
-		return exportFunctions(editor, [functionName]);
+		return functionName !== '' ? exportFunctions(editor, [functionName]) : null;
 	}
 }
 
@@ -57,7 +57,7 @@ export function exportAllFunctions() {
 			}
 		}
 
-		return exportFunctions(editor, functionNames);
+		return functionNames.length > 0 ? exportFunctions(editor, functionNames) : null;
 	}
 }
 
