@@ -33,6 +33,10 @@
 			{
 				"command": "module-exports.exportFunctionUnderCursorExclusive",
 				"title": "Export function under cursor (exclusive)"
+			},
+			{
+				"command": "module-exports.clearAllExports",
+				"title": "Clear all exports"
 			}
 		]
 	},

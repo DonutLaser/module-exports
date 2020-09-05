@@ -1,5 +1,17 @@
 import * as vscode from 'vscode';
 
+function replaceModuleExports(editor: vscode.TextEditor, replaceWith: string) {
+    const document = editor.document;
+    const { exportsLine } = getExportsLineInText(document);
+
+    const start = document.lineAt(exportsLine).range.start;
+    const end = document.lineAt(document.lineCount - 1).range.end;
+
+    return editor.edit(editBuilder => {
+        editBuilder.replace(new vscode.Range(start, end), replaceWith);
+    });
+}
+
 // Get the line in the text where the module.exports resides
 function getExportsLineInText(document: vscode.TextDocument) {
     let resultIndex = -1;
@@ -166,16 +178,11 @@ function replaceSingleExport(editor: vscode.TextEditor, functionNames: string[])
 
 function replaceExport(editor: vscode.TextEditor, functionName: string) {
     if (!functionName) { return; }
+    return replaceModuleExports(editor, `module.exports = ${functionName};`);
+}
 
-    const document = editor.document;
-    const { exportsLine } = getExportsLineInText(document);
-
-    const start = document.lineAt(exportsLine).range.start;
-    const end = document.lineAt(document.lineCount - 1).range.end;
-
-    return editor.edit(editBuilder => {
-        editBuilder.replace(new vscode.Range(start, end), `module.exports = ${functionName};`);
-    });
+function clearExports(editor: vscode.TextEditor) {
+    return replaceModuleExports(editor, '');
 }
 
 export {
@@ -186,4 +193,5 @@ export {
     listAppendToExport,
     replaceSingleExport,
     replaceExport,
+    clearExports,
 };

@@ -43,6 +43,12 @@ async function exportFunctionExclusive(editor: vscode.TextEditor, functionName: 
 	}
 }
 
+export function clearAllExports() {
+	const editor = vscode.window.activeTextEditor;
+
+	if (editor) { return modulesEditor.clearExports(editor); }
+}
+
 export function exportFunctionUnderCursorExclusive() {
 	const editor = vscode.window.activeTextEditor;
 
@@ -83,9 +89,11 @@ export function activate(context: vscode.ExtensionContext) {
 	const underCursor = vscode.commands.registerCommand('module-exports.exportFunctionUnderCursor', exportFunctionUnderCursor);
 	const all = vscode.commands.registerCommand('module-exports.exportAllFunctions', exportAllFunctions);
 	const exclusive = vscode.commands.registerCommand('module-exports.exportFunctionUnderCursorExclusive', exportFunctionUnderCursorExclusive);
+	const clear = vscode.commands.registerCommand('module-exports.clearAllExports', clearAllExports);
 	context.subscriptions.push(underCursor);
 	context.subscriptions.push(all);
 	context.subscriptions.push(exclusive);
+	context.subscriptions.push(clear);
 }
 
 export function deactivate() {
