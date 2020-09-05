@@ -133,4 +133,64 @@ suite('Extension Test Suite', () => {
 			assert.equal(text.includes('module.exports = { start, end, test };'), true);
 		}
 	});
+
+	test('Exports a function exclusively when module.exports doesn\'t exist in the file', async () => {
+		await setupText('function start() {\n\n}', 0);
+
+		await myExtension.exportFunctionUnderCursorExclusive();
+
+		const editor = vscode.window.activeTextEditor;
+		if (editor) {
+			const text = editor.document.getText();
+			assert.equal(text.includes('module.exports = start;'), true);
+		}
+	});
+
+	test('Exports a function exclusively when module.exports = {}; exists in the file', async () => {
+		await setupText('function start() {\n\n}\n\nmodule.exports = {};', 0);
+
+		await myExtension.exportFunctionUnderCursorExclusive();
+
+		const editor = vscode.window.activeTextEditor;
+		if (editor) {
+			const text = editor.document.getText();
+			assert.equal(text.includes('module.exports = start;'), true);
+		}
+	});
+
+	test('Exports a function exclusively when module.exports = {}; exists in the file and something is already exported inline', async () => {
+		await setupText('function start() {\n\n}\n\nfunction end() {\n\n}\n\nmodule.exports = { end };', 0);
+
+		await myExtension.exportFunctionUnderCursorExclusive();
+
+		const editor = vscode.window.activeTextEditor;
+		if (editor) {
+			const text = editor.document.getText();
+			assert.equal(text.includes('module.exports = start;'), true);
+		}
+	});
+
+	test('Exports a function exclusively when something is already exclusively exported', async () => {
+		await setupText('function start() {\n\n}\n\nfunction end() {\n\n}\n\nmodule.exports = end;', 0);
+
+		await myExtension.exportFunctionUnderCursorExclusive();
+
+		const editor = vscode.window.activeTextEditor;
+		if (editor) {
+			const text = editor.document.getText();
+			assert.equal(text.includes('module.exports = start;'), true);
+		}
+	});
+
+	test('Exports a function exclusively when a list of functions is already exported', async () => {
+		await setupText('function start() {\n\n}\n\nfunction end() {\n\n}\n\nfunction temp() {\n\n}\n\nmodule.exports = {\n\tend,\n\ttemp\n}', 0);
+
+		await myExtension.exportFunctionUnderCursorExclusive();
+
+		const editor = vscode.window.activeTextEditor;
+		if (editor) {
+			const text = editor.document.getText();
+			assert.equal(text.includes('module.exports = start;'), true);
+		}
+	});
 });
