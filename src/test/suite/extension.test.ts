@@ -120,6 +120,8 @@ suite('Extension Test Suite', () => {
 			const text = editor.document.getText();
 			assert.equal(text.includes('module.exports = { start, start };'), false);
 		}
+
+		await clearText();
 	});
 
 	test('Exports all functions successfully', async () => {
@@ -132,6 +134,8 @@ suite('Extension Test Suite', () => {
 			const text = editor.document.getText();
 			assert.equal(text.includes('module.exports = { start, end, test };'), true);
 		}
+
+		await clearText();
 	});
 
 	test('Exports a function exclusively when module.exports doesn\'t exist in the file', async () => {
@@ -144,6 +148,8 @@ suite('Extension Test Suite', () => {
 			const text = editor.document.getText();
 			assert.equal(text.includes('module.exports = start;'), true);
 		}
+
+		await clearText();
 	});
 
 	test('Exports a function exclusively when module.exports = {}; exists in the file', async () => {
@@ -156,6 +162,8 @@ suite('Extension Test Suite', () => {
 			const text = editor.document.getText();
 			assert.equal(text.includes('module.exports = start;'), true);
 		}
+
+		await clearText();
 	});
 
 	test('Exports a function exclusively when module.exports = {}; exists in the file and something is already exported inline', async () => {
@@ -168,6 +176,8 @@ suite('Extension Test Suite', () => {
 			const text = editor.document.getText();
 			assert.equal(text.includes('module.exports = start;'), true);
 		}
+
+		await clearText();
 	});
 
 	test('Exports a function exclusively when something is already exclusively exported', async () => {
@@ -180,6 +190,8 @@ suite('Extension Test Suite', () => {
 			const text = editor.document.getText();
 			assert.equal(text.includes('module.exports = start;'), true);
 		}
+
+		await clearText();
 	});
 
 	test('Exports a function exclusively when a list of functions is already exported', async () => {
@@ -192,5 +204,62 @@ suite('Extension Test Suite', () => {
 			const text = editor.document.getText();
 			assert.equal(text.includes('module.exports = start;'), true);
 		}
+
+		await clearText();
+	});
+
+	test('Clears all exports when module.exports = {} exists in the file', async () => {
+		await setupText('function start() {\n\n}\n\nmodule.exports = {};', 0);
+
+		await myExtension.clearAllExports();
+
+		const editor = vscode.window.activeTextEditor;
+		if (editor) {
+			const text = editor.document.getText();
+			assert.equal(text.includes('module.exports'), false);
+		}
+
+		await clearText();
+	});
+
+	test('Clears all exports when module.exports exists in the file and something is exported inline', async () => {
+		await setupText('function start() {\n\n}\n\nmodule.exports = { start };', 0);
+
+		await myExtension.clearAllExports();
+
+		const editor = vscode.window.activeTextEditor;
+		if (editor) {
+			const text = editor.document.getText();
+			assert.equal(text.includes('module.exports'), false);
+		}
+
+		await clearText();
+	});
+
+	test('Clears all exports when module.exports exists in the file and something is exported exclusively', async () => {
+		await setupText('function start() {\n\n}\n\nmodule.exports = start;', 0);
+
+		await myExtension.clearAllExports();
+
+		const editor = vscode.window.activeTextEditor;
+		if (editor) {
+			const text = editor.document.getText();
+			assert.equal(text.includes('module.exports'), false);
+		}
+
+		await clearText();
+	});
+
+	test('Clears all exports when module.exports exists in the file and something is exported in a list', async () => {
+		await setupText('function start() {\n\n}\n\nfunction end() {\n\n}\n\nmodule.exports = {\n\tstart,\n\tend,\n};', 0);
+
+		await myExtension.clearAllExports();
+
+		const editor = vscode.window.activeTextEditor;
+		if (editor) {
+			const text = editor.document.getText();
+			assert.equal(text.includes('module.exports'), false);
+		}
+		await clearText();
 	});
 });
