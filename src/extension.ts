@@ -46,7 +46,12 @@ async function exportFunctionExclusive(editor: vscode.TextEditor, functionName: 
 export function clearAllExports() {
 	const editor = vscode.window.activeTextEditor;
 
-	if (editor) { return modulesEditor.clearExports(editor); }
+	if (editor) {
+		const text = editor.document.getText();
+		if (text.includes('module.exports')) {
+			return modulesEditor.clearExports(editor);
+		}
+	}
 }
 
 export function exportFunctionUnderCursorExclusive() {
