@@ -17,7 +17,8 @@
 	"activationEvents": [
 		"onCommand:module-exports.exportFunctionUnderCursor",
 		"onCommand:module-exports.exportAllFunctions",
-		"onCommand:module-exports.exportFunctionUnderCursorExclusive"
+		"onCommand:module-exports.exportFunctionUnderCursorExclusive",
+		"onCommand:module-exports.clearAllExports"
 	],
 	"main": "./out/extension.js",
 	"contributes": {
