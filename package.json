@@ -16,7 +16,8 @@
 	],
 	"activationEvents": [
 		"onCommand:module-exports.exportFunctionUnderCursor",
-		"onCommand:module-exports.exportAllFunctions"
+		"onCommand:module-exports.exportAllFunctions",
+		"onCommand:module-exports.exportFunctionUnderCursorExclusive"
 	],
 	"main": "./out/extension.js",
 	"contributes": {
@@ -28,6 +29,10 @@
 			{
 				"command": "module-exports.exportAllFunctions",
 				"title": "Export all functions in the module"
+			},
+			{
+				"command": "module-exports.exportFunctionUnderCursorExclusive",
+				"title": "Export function under cursor (exclusive)"
 			}
 		]
 	},

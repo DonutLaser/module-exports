@@ -1,6 +1,20 @@
 import * as vscode from 'vscode';
 import * as modulesEditor from './editor';
 
+function getFunctionUnderCursor(editor: vscode.TextEditor) {
+	let line = editor.selection.active.line;
+
+	for (let i = line; i >= 0; --i) {
+		const sourceLine = editor.document.lineAt(i).text;
+		if (sourceLine && sourceLine.startsWith('function') || sourceLine.startsWith('async function')) {
+			const match = sourceLine.replace(/async|function/g, '').match(/^[^(]*/);
+			if (match) { return match[0].trim(); }
+		}
+	}
+
+	return '';
+}
+
 async function exportFunctions(editor: vscode.TextEditor, functionNames: string[]) {
 	const text = editor.document.getText();
 	if (!text.includes('module.exports')) { // module.exports doesn't exist in the file
@@ -20,25 +34,29 @@ async function exportFunctions(editor: vscode.TextEditor, functionNames: string[
 	}
 }
 
+async function exportFunctionExclusive(editor: vscode.TextEditor, functionName: string) {
+	const text = editor.document.getText();
+	if (!text.includes('module.exports')) {
+		await modulesEditor.newExportStatement(editor, [functionName], true);
+	} else {
+		await modulesEditor.replaceExport(editor, functionName);
+	}
+}
+
+export function exportFunctionUnderCursorExclusive() {
+	const editor = vscode.window.activeTextEditor;
+
+	if (editor) {
+		const functionName = getFunctionUnderCursor(editor);
+		return functionName !== '' ? exportFunctionExclusive(editor, functionName) : null;
+	}
+}
+
 export function exportFunctionUnderCursor() {
 	const editor = vscode.window.activeTextEditor;
 
 	if (editor) {
-		let line = editor.selection.active.line;
-
-		// Figure out a function name under the cursor
-		let functionName = '';
-		for (let i = line; i >= 0; --i) {
-			const sourceLine = editor.document.lineAt(i).text;
-			if (sourceLine && sourceLine.startsWith('function') || sourceLine.startsWith('async function')) {
-				const match = sourceLine.replace(/async|function/g, '').match(/^[^(]*/);
-				if (match) {
-					functionName = match[0].trim();
-					break;
-				}
-			}
-		}
-
+		const functionName = getFunctionUnderCursor(editor);
 		return functionName !== '' ? exportFunctions(editor, [functionName]) : null;
 	}
 }
@@ -64,8 +82,12 @@ export function exportAllFunctions() {
 export function activate(context: vscode.ExtensionContext) {
 	const underCursor = vscode.commands.registerCommand('module-exports.exportFunctionUnderCursor', exportFunctionUnderCursor);
 	const all = vscode.commands.registerCommand('module-exports.exportAllFunctions', exportAllFunctions);
+	const exclusive = vscode.commands.registerCommand('module-exports.exportFunctionUnderCursorExclusive', exportFunctionUnderCursorExclusive);
 	context.subscriptions.push(underCursor);
 	context.subscriptions.push(all);
+	context.subscriptions.push(exclusive);
 }
 
-export function deactivate() { }
+export function deactivate() {
+
+}

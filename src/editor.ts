@@ -46,13 +46,20 @@ function getExportsType(document: vscode.TextDocument) {
 }
 
 // Should be used when module.exports does not exist in the file
-function newExportStatement(editor: vscode.TextEditor, functionNames: string[]) {
+function newExportStatement(editor: vscode.TextEditor, functionNames: string[], exclusive = false) {
     if (!functionNames || functionNames.length === 0) { return; }
 
     const document = editor.document;
     return editor.edit(editBuilder => {
         const lastLine = document.lineAt(document.lineCount - 1).range.end;
-        editBuilder.insert(lastLine, `\n\nmodule.exports = { ${functionNames.join(', ')} };`);
+        let lineToInsert = '';
+        if (exclusive && functionNames.length === 1) {
+            lineToInsert = `\n\nmodule.exports = ${functionNames[0]};`;
+        } else {
+            lineToInsert = `\n\nmodule.exports = { ${functionNames.join(', ')} };`;
+        }
+
+        editBuilder.insert(lastLine, lineToInsert);
     });
 }
 
@@ -157,6 +164,20 @@ function replaceSingleExport(editor: vscode.TextEditor, functionNames: string[])
     }
 }
 
+function replaceExport(editor: vscode.TextEditor, functionName: string) {
+    if (!functionName) { return; }
+
+    const document = editor.document;
+    const { exportsLine } = getExportsLineInText(document);
+
+    const start = document.lineAt(exportsLine).range.start;
+    const end = document.lineAt(document.lineCount - 1).range.end;
+
+    return editor.edit(editBuilder => {
+        editBuilder.replace(new vscode.Range(start, end), `module.exports = ${functionName};`);
+    });
+}
+
 export {
     getExportsType,
     newExportStatement,
@@ -164,4 +185,5 @@ export {
     inlineAppendToExport,
     listAppendToExport,
     replaceSingleExport,
+    replaceExport,
 };
