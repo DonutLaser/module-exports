@@ -97,8 +97,17 @@ module.exports =
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.replaceSingleExport = exports.listAppendToExport = exports.inlineAppendToExport = exports.addToExport = exports.newExportStatement = exports.getExportsType = void 0;
+exports.clearExports = exports.replaceExport = exports.replaceSingleExport = exports.listAppendToExport = exports.inlineAppendToExport = exports.addToExport = exports.newExportStatement = exports.getExportsType = void 0;
 const vscode = __webpack_require__(/*! vscode */ "vscode");
+function replaceModuleExports(editor, replaceWith) {
+    const document = editor.document;
+    const { exportsLine } = getExportsLineInText(document);
+    const start = document.lineAt(exportsLine).range.start;
+    const end = document.lineAt(document.lineCount - 1).range.end;
+    return editor.edit(editBuilder => {
+        editBuilder.replace(new vscode.Range(start, end), replaceWith);
+    });
+}
 // Get the line in the text where the module.exports resides
 function getExportsLineInText(document) {
     let resultIndex = -1;
@@ -145,14 +154,21 @@ function getExportsType(document) {
 }
 exports.getExportsType = getExportsType;
 // Should be used when module.exports does not exist in the file
-function newExportStatement(editor, functionNames) {
+function newExportStatement(editor, functionNames, exclusive = false) {
     if (!functionNames || functionNames.length === 0) {
         return;
     }
     const document = editor.document;
     return editor.edit(editBuilder => {
         const lastLine = document.lineAt(document.lineCount - 1).range.end;
-        editBuilder.insert(lastLine, `\n\nmodule.exports = { ${functionNames.join(', ')} };`);
+        let lineToInsert = '';
+        if (exclusive && functionNames.length === 1) {
+            lineToInsert = `\n\nmodule.exports = ${functionNames[0]};`;
+        }
+        else {
+            lineToInsert = `\n\nmodule.exports = { ${functionNames.join(', ')} };`;
+        }
+        editBuilder.insert(lastLine, lineToInsert);
     });
 }
 exports.newExportStatement = newExportStatement;
@@ -252,6 +268,17 @@ function replaceSingleExport(editor, functionNames) {
     }
 }
 exports.replaceSingleExport = replaceSingleExport;
+function replaceExport(editor, functionName) {
+    if (!functionName) {
+        return;
+    }
+    return replaceModuleExports(editor, `module.exports = ${functionName};`);
+}
+exports.replaceExport = replaceExport;
+function clearExports(editor) {
+    return replaceModuleExports(editor, '');
+}
+exports.clearExports = clearExports;
 
 
 /***/ }),
@@ -275,9 +302,22 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deactivate = exports.activate = exports.exportAllFunctions = exports.exportFunctionUnderCursor = void 0;
+exports.deactivate = exports.activate = exports.exportAllFunctions = exports.exportFunctionUnderCursor = exports.exportFunctionUnderCursorExclusive = exports.clearAllExports = void 0;
 const vscode = __webpack_require__(/*! vscode */ "vscode");
 const modulesEditor = __webpack_require__(/*! ./editor */ "./src/editor.ts");
+function getFunctionUnderCursor(editor) {
+    let line = editor.selection.active.line;
+    for (let i = line; i >= 0; --i) {
+        const sourceLine = editor.document.lineAt(i).text;
+        if (sourceLine && sourceLine.startsWith('function') || sourceLine.startsWith('async function')) {
+            const match = sourceLine.replace(/async|function/g, '').match(/^[^(]*/);
+            if (match) {
+                return match[0].trim();
+            }
+        }
+    }
+    return '';
+}
 function exportFunctions(editor, functionNames) {
     return __awaiter(this, void 0, void 0, function* () {
         const text = editor.document.getText();
@@ -301,23 +341,40 @@ function exportFunctions(editor, functionNames) {
         }
     });
 }
+function exportFunctionExclusive(editor, functionName) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const text = editor.document.getText();
+        if (!text.includes('module.exports')) {
+            yield modulesEditor.newExportStatement(editor, [functionName], true);
+        }
+        else {
+            yield modulesEditor.replaceExport(editor, functionName);
+        }
+    });
+}
+function clearAllExports() {
+    const editor = vscode.window.activeTextEditor;
+    if (editor) {
+        const text = editor.document.getText();
+        if (text.includes('module.exports')) {
+            return modulesEditor.clearExports(editor);
+        }
+    }
+}
+exports.clearAllExports = clearAllExports;
+function exportFunctionUnderCursorExclusive() {
+    const editor = vscode.window.activeTextEditor;
+    if (editor) {
+        const functionName = getFunctionUnderCursor(editor);
+        return functionName !== '' ? exportFunctionExclusive(editor, functionName) : null;
+    }
+}
+exports.exportFunctionUnderCursorExclusive = exportFunctionUnderCursorExclusive;
 function exportFunctionUnderCursor() {
     const editor = vscode.window.activeTextEditor;
     if (editor) {
-        let line = editor.selection.active.line;
-        // Figure out a function name under the cursor
-        let functionName = '';
-        for (let i = line; i >= 0; --i) {
-            const sourceLine = editor.document.lineAt(i).text;
-            if (sourceLine && sourceLine.startsWith('function') || sourceLine.startsWith('async function')) {
-                const match = sourceLine.replace(/async|function/g, '').match(/^[^(]*/);
-                if (match) {
-                    functionName = match[0].trim();
-                    break;
-                }
-            }
-        }
-        return exportFunctions(editor, [functionName]);
+        const functionName = getFunctionUnderCursor(editor);
+        return functionName !== '' ? exportFunctions(editor, [functionName]) : null;
     }
 }
 exports.exportFunctionUnderCursor = exportFunctionUnderCursor;
@@ -335,18 +392,23 @@ function exportAllFunctions() {
                 }
             }
         }
-        return exportFunctions(editor, functionNames);
+        return functionNames.length > 0 ? exportFunctions(editor, functionNames) : null;
     }
 }
 exports.exportAllFunctions = exportAllFunctions;
 function activate(context) {
     const underCursor = vscode.commands.registerCommand('module-exports.exportFunctionUnderCursor', exportFunctionUnderCursor);
     const all = vscode.commands.registerCommand('module-exports.exportAllFunctions', exportAllFunctions);
+    const exclusive = vscode.commands.registerCommand('module-exports.exportFunctionUnderCursorExclusive', exportFunctionUnderCursorExclusive);
+    const clear = vscode.commands.registerCommand('module-exports.clearAllExports', clearAllExports);
     context.subscriptions.push(underCursor);
     context.subscriptions.push(all);
+    context.subscriptions.push(exclusive);
+    context.subscriptions.push(clear);
 }
 exports.activate = activate;
-function deactivate() { }
+function deactivate() {
+}
 exports.deactivate = deactivate;
 
 
