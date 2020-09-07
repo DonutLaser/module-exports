@@ -43,6 +43,28 @@ async function exportFunctionExclusive(editor: vscode.TextEditor, functionName: 
 	}
 }
 
+export function formatExportsInline() {
+	const editor = vscode.window.activeTextEditor;
+
+	if (editor) {
+		const text = editor.document.getText();
+		if (text.includes('module.exports')) {
+			return modulesEditor.formatExportsInline(editor);
+		}
+	}
+}
+
+export function formatExportsList() {
+	const editor = vscode.window.activeTextEditor;
+
+	if (editor) {
+		const text = editor.document.getText();
+		if (text.includes('module.exports')) {
+			return modulesEditor.formatExportsList(editor);
+		}
+	}
+}
+
 export function clearAllExports() {
 	const editor = vscode.window.activeTextEditor;
 
@@ -95,10 +117,15 @@ export function activate(context: vscode.ExtensionContext) {
 	const all = vscode.commands.registerCommand('module-exports.exportAllFunctions', exportAllFunctions);
 	const exclusive = vscode.commands.registerCommand('module-exports.exportFunctionUnderCursorExclusive', exportFunctionUnderCursorExclusive);
 	const clear = vscode.commands.registerCommand('module-exports.clearAllExports', clearAllExports);
+	const formatInline = vscode.commands.registerCommand('module-exports.formatExportsInline', formatExportsInline);
+	const formatList = vscode.commands.registerCommand('module-exports.formatExportsList', formatExportsList);
+
 	context.subscriptions.push(underCursor);
 	context.subscriptions.push(all);
 	context.subscriptions.push(exclusive);
 	context.subscriptions.push(clear);
+	context.subscriptions.push(formatInline);
+	context.subscriptions.push(formatList);
 }
 
 export function deactivate() {

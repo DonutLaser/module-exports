@@ -18,9 +18,11 @@
 		"onCommand:module-exports.exportFunctionUnderCursor",
 		"onCommand:module-exports.exportAllFunctions",
 		"onCommand:module-exports.exportFunctionUnderCursorExclusive",
-		"onCommand:module-exports.clearAllExports"
+		"onCommand:module-exports.clearAllExports",
+		"onCommand:module-exports.formatExportsInline",
+		"onCommand:module-exports.formatExportsList"
 	],
-	"main": "./dist/extension.js",
+	"main": "./out/extension.js",
 	"contributes": {
 		"commands": [
 			{
@@ -38,6 +40,14 @@
 			{
 				"command": "module-exports.clearAllExports",
 				"title": "Clear all exports"
+			},
+			{
+				"command": "module-exports.formatExportsInline",
+				"title": "Format exports (inline)"
+			},
+			{
+				"command": "module-exports.formatExportsList",
+				"title": "Format exports (list)"
 			}
 		]
 	},

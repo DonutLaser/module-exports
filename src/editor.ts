@@ -1,5 +1,17 @@
 import * as vscode from 'vscode';
 
+function getExportedFunctions(document: vscode.TextDocument, exportsLine: number) {
+    const result: string[] = [];
+    for (let i = exportsLine + 1; i < document.lineCount; ++i) {
+        const sourceLine = document.lineAt(i).text;
+        if (sourceLine && sourceLine.includes('}')) {
+            break;
+        } else { result.push(sourceLine.replace(/,/g, '').trim()); }
+    }
+
+    return result;
+}
+
 function replaceModuleExports(editor: vscode.TextEditor, replaceWith: string) {
     const document = editor.document;
     const { exportsLine } = getExportsLineInText(document);
@@ -185,6 +197,36 @@ function clearExports(editor: vscode.TextEditor) {
     return replaceModuleExports(editor, '');
 }
 
+function formatExportsInline(editor: vscode.TextEditor) {
+    const document = editor.document;
+    const { exportsLine } = getExportsLineInText(document);
+
+    const exportsType = getExportsType(document);
+    if (exportsType === 'list') {
+        const functions = getExportedFunctions(document, exportsLine);
+        if (functions.length > 0) {
+            return replaceModuleExports(editor, `module.exports = { ${functions.join(', ')} };`);
+        }
+    }
+
+    return;
+}
+
+function formatExportsList(editor: vscode.TextEditor) {
+    const document = editor.document;
+    const { exportsText } = getExportsLineInText(document);
+
+    const exportsType = getExportsType(document);
+    if (exportsType === 'inline') {
+        const functions = exportsText.replace(/\s+/g, '').replace(/^module.exports={/, '').replace(/[};]/g, '').split(',').map(fn => fn.trim());
+        if (functions.length > 0) {
+            return replaceModuleExports(editor, `module.exports = {\n${functions.map(f => '\t' + f).join(',\n')},\n};`);
+        }
+    }
+
+    return;
+}
+
 export {
     getExportsType,
     newExportStatement,
@@ -194,4 +236,6 @@ export {
     replaceSingleExport,
     replaceExport,
     clearExports,
+    formatExportsInline,
+    formatExportsList,
 };
