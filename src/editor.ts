@@ -227,6 +227,56 @@ function formatExportsList(editor: vscode.TextEditor) {
     return;
 }
 
+function cleanUnusedExports(editor: vscode.TextEditor, functionNames: string[]) {
+    const document = editor.document;
+    const { exportsLine, exportsText } = getExportsLineInText(document);
+
+    const exportsType = getExportsType(document);
+    if (exportsType === 'single') {
+        const match = exportsText.replace(';', '').match(/[^=]*$/);
+        if (match) {
+            const exportedThing = match[0].trim();
+            if (!functionNames.includes(exportedThing)) {
+                return clearExports(editor);
+            }
+        }
+    } else if (exportsType === 'inline') {
+        const functions = exportsText.replace(/\s+/g, '').replace(/^module.exports={/, '').replace(/[};]/g, '').split(',').map(fn => fn.trim());
+        if (functions.length > 0) {
+            const usedFunctions: string[] = [];
+            functions.forEach(f => {
+                if (functionNames.includes(f)) {
+                    usedFunctions.push(f);
+                }
+            });
+
+            if (usedFunctions.length > 0) {
+                return replaceModuleExports(editor, `module.exports = { ${usedFunctions.join(', ')} };`);
+            }
+
+            return replaceModuleExports(editor, '');
+        }
+    } else if (exportsType === 'list') {
+        const functions = getExportedFunctions(document, exportsLine);
+        if (functions.length > 0) {
+            const usedFunctions: string[] = [];
+            functions.forEach(f => {
+                if (functionNames.includes(f)) {
+                    usedFunctions.push(f);
+                }
+            });
+
+            if (usedFunctions.length > 0) {
+                return replaceModuleExports(editor, `module.exports = {\n${usedFunctions.map(f => '\t' + f).join(',\n')},\n};`);
+            }
+
+            return replaceModuleExports(editor, '');
+        }
+    }
+
+    return;
+}
+
 export {
     getExportsType,
     newExportStatement,
@@ -238,4 +288,5 @@ export {
     clearExports,
     formatExportsInline,
     formatExportsList,
+    cleanUnusedExports,
 };

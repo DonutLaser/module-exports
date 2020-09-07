@@ -43,6 +43,24 @@ async function exportFunctionExclusive(editor: vscode.TextEditor, functionName: 
 	}
 }
 
+export function cleanExports() {
+	const editor = vscode.window.activeTextEditor;
+
+	if (editor) {
+		const document = editor.document;
+		const functionNames: string[] = [];
+		for (let i = 0; i < document.lineCount; ++i) {
+			const sourceLine = document.lineAt(i).text;
+			if (sourceLine && sourceLine.startsWith('function') || sourceLine.startsWith('async function')) {
+				const match = sourceLine.replace(/async|function/g, '').match(/^[^(]*/);
+				if (match) { functionNames.push(match[0].trim()); }
+			}
+		}
+
+		return functionNames.length > 0 ? modulesEditor.cleanUnusedExports(editor, functionNames) : null;
+	}
+}
+
 export function formatExportsInline() {
 	const editor = vscode.window.activeTextEditor;
 
@@ -119,6 +137,7 @@ export function activate(context: vscode.ExtensionContext) {
 	const clear = vscode.commands.registerCommand('module-exports.clearAllExports', clearAllExports);
 	const formatInline = vscode.commands.registerCommand('module-exports.formatExportsInline', formatExportsInline);
 	const formatList = vscode.commands.registerCommand('module-exports.formatExportsList', formatExportsList);
+	const clean = vscode.commands.registerCommand('module-exports.cleanExports', cleanExports);
 
 	context.subscriptions.push(underCursor);
 	context.subscriptions.push(all);
@@ -126,6 +145,7 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(clear);
 	context.subscriptions.push(formatInline);
 	context.subscriptions.push(formatList);
+	context.subscriptions.push(clean);
 }
 
 export function deactivate() {

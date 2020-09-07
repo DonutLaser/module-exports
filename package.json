@@ -20,7 +20,8 @@
 		"onCommand:module-exports.exportFunctionUnderCursorExclusive",
 		"onCommand:module-exports.clearAllExports",
 		"onCommand:module-exports.formatExportsInline",
-		"onCommand:module-exports.formatExportsList"
+		"onCommand:module-exports.formatExportsList",
+		"onCommand:module-exports.cleanExports"
 	],
 	"main": "./out/extension.js",
 	"contributes": {
@@ -48,6 +49,10 @@
 			{
 				"command": "module-exports.formatExportsList",
 				"title": "Format exports (list)"
+			},
+			{
+				"command": "module-exports.cleanExports",
+				"title": "Clean exports"
 			}
 		]
 	},
