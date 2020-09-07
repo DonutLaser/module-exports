@@ -43,6 +43,17 @@ async function exportFunctionExclusive(editor: vscode.TextEditor, functionName: 
 	}
 }
 
+export function sortExports() {
+	const editor = vscode.window.activeTextEditor;
+
+	if (editor) {
+		const text = editor.document.getText();
+		if (text.includes('module.exports')) {
+			return modulesEditor.sortExports(editor);
+		}
+	}
+}
+
 export function cleanExports() {
 	const editor = vscode.window.activeTextEditor;
 
@@ -138,6 +149,7 @@ export function activate(context: vscode.ExtensionContext) {
 	const formatInline = vscode.commands.registerCommand('module-exports.formatExportsInline', formatExportsInline);
 	const formatList = vscode.commands.registerCommand('module-exports.formatExportsList', formatExportsList);
 	const clean = vscode.commands.registerCommand('module-exports.cleanExports', cleanExports);
+	const sort = vscode.commands.registerCommand('module-exports.sortExports', sortExports);
 
 	context.subscriptions.push(underCursor);
 	context.subscriptions.push(all);
@@ -146,6 +158,7 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(formatInline);
 	context.subscriptions.push(formatList);
 	context.subscriptions.push(clean);
+	context.subscriptions.push(sort);
 }
 
 export function deactivate() {

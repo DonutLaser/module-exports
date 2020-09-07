@@ -21,7 +21,8 @@
 		"onCommand:module-exports.clearAllExports",
 		"onCommand:module-exports.formatExportsInline",
 		"onCommand:module-exports.formatExportsList",
-		"onCommand:module-exports.cleanExports"
+		"onCommand:module-exports.cleanExports",
+		"onCommand:module-exports.sortExports"
 	],
 	"main": "./out/extension.js",
 	"contributes": {
@@ -53,6 +54,10 @@
 			{
 				"command": "module-exports.cleanExports",
 				"title": "Clean exports"
+			},
+			{
+				"command": "module-exports.sortExports",
+				"title": "Sort exports"
 			}
 		]
 	},

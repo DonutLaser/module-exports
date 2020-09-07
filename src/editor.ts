@@ -277,6 +277,26 @@ function cleanUnusedExports(editor: vscode.TextEditor, functionNames: string[]) 
     return;
 }
 
+function sortExports(editor: vscode.TextEditor) {
+    const document = editor.document;
+    const { exportsLine, exportsText } = getExportsLineInText(document);
+
+    const exportsType = getExportsType(document);
+    if (exportsType === 'list') {
+        const functions = getExportedFunctions(document, exportsLine);
+        if (functions.length > 0) {
+            return replaceModuleExports(editor, `module.exports = {\n${functions.sort().map(f => '\t' + f).join(',\n')},\n};`);
+        }
+    } else if (exportsType === 'inline') {
+        const functions = exportsText.replace(/\s+/g, '').replace(/^module.exports={/, '').replace(/[};]/g, '').split(',').map(fn => fn.trim());
+        if (functions.length > 0) {
+            return replaceModuleExports(editor, `module.exports = { ${functions.sort().join(', ')} };`);
+        }
+    }
+
+    return;
+}
+
 export {
     getExportsType,
     newExportStatement,
@@ -289,4 +309,5 @@ export {
     formatExportsInline,
     formatExportsList,
     cleanUnusedExports,
+    sortExports,
 };
